@@ -699,9 +699,11 @@ class Mega:
         else:
             dest_path += '/'
 
+        tempfile_name = ''
         with tempfile.NamedTemporaryFile(mode='w+b',
                                          prefix='megapy_',
                                          delete=False) as temp_output_file:
+            tempfile_name = temp_output_file.name
             k_str = a32_to_str(k)
             counter = Counter.new(128,
                                   initial_value=((iv[0] << 32) + iv[1]) << 64)
@@ -733,17 +735,17 @@ class Mega:
                     block += b'\0' * (16 - (len(block) % 16))
                 mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
 
-                file_info = os.stat(temp_output_file.name)
-                logger.info('%s of %s downloaded', file_info.st_size,
+                logger.info('%s of %s downloaded', temp_output_file.tell(),
                             file_size)
             file_mac = str_to_a32(mac_str)
             # check mac integrity
             if (file_mac[0] ^ file_mac[1],
                     file_mac[2] ^ file_mac[3]) != meta_mac:
                 raise ValueError('Mismatched mac')
-            output_path = Path(dest_path + file_name)
-            shutil.move(temp_output_file.name, output_path)
-            return output_path
+
+        output_path = Path(dest_path + file_name)
+        shutil.move(tempfile_name, output_path)
+        return output_path
 
     def upload(self, filename, dest=None, dest_filename=None):
         # determine storage node
