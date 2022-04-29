@@ -149,6 +149,15 @@ class Mega:
             sid = binascii.unhexlify('0' + sid if len(sid) % 2 else sid)
             self.sid = base64_url_encode(sid[:43])
 
+    def logout_session(self, sessionid=''):
+        """Log out the given session. If an empty string, then the current session will be logged out."""
+        if not sessionid:
+            sessionid = self.get_session().get('sessionid')
+        if not sessionid:
+            logger.info('Couldn\'t determine session ID for logging out.')
+            return
+        self._api_request({'a': 'usr', 's': [sessionid]})
+
     @retry(retry=retry_if_exception_type(RuntimeError),
            wait=wait_exponential(multiplier=2, min=2, max=60))
     def _api_request(self, data):
