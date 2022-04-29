@@ -205,6 +205,26 @@ class Mega:
         else:
             raise RequestError('Url key missing')
 
+    def get_session(self):
+        """Get information about the current session."""
+        sessions = self._api_request({'a': 'usl', 'x': 1})
+        keys = (
+            'logintime',
+            'most_recent_activity',
+            'useragent',
+            'ip',
+            'country',
+            'is_current',
+            'sessionid',
+            'is_logged_in'
+        )
+        session_dict = {}
+        for session_info in sessions:
+            if session_info[5] == 1:
+                session_dict = dict(zip(keys, session_info))
+                break
+        return session_dict
+
     def _process_file(self, file, shared_keys):
         if file['t'] == 0 or file['t'] == 1:
             keys = dict(
